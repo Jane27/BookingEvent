@@ -11,6 +11,34 @@ const User = require("./models/user");
 
 const app = express();
 
+const events = eventIds => {
+  return Event.find({ _id: { $in: eventIds } })
+    .then(events => {
+      return events.map(event => {
+        return {
+          ...event._doc,
+          creator: user.bind(this, event.creator)
+        };
+      });
+    })
+    .catch(err => {
+      throw err;
+    });
+};
+
+const user = userId => {
+  return User.findById(userId)
+    .then(user => {
+      return {
+        ...user._doc,
+        createdEvents: events.bind(this, user._doc.createdEvents)
+      };
+    })
+    .catch(err => {
+      throw err;
+    });
+};
+
 // const events = [];
 
 app.use(bodyParser.json());
@@ -25,12 +53,14 @@ app.use(
         description:String!
         price:Float!
         date:String!
+        creator: User!
     }
 
     type User {
         _id:ID!
         email:String!
         password:String
+        createdEvents: [Event!]
     }
 
     input EventInput {
@@ -60,7 +90,10 @@ app.use(
         return Event.find()
           .then(events => {
             return events.map(event => {
-              return { ...event._doc };
+              return {
+                ...event._doc,
+                creator: user.bind(this, event._doc.creator)
+              };
             });
           })
           .catch(err => {
@@ -79,7 +112,10 @@ app.use(
         return event
           .save()
           .then(result => {
-            createEvent = { ...result._doc };
+            createEvent = {
+              ...result._doc,
+              creator: user.bind(this, result._doc.creator)
+            };
             return User.findById("5e71983bbe5cd733c2b2d99e");
           })
           .then(user => {
